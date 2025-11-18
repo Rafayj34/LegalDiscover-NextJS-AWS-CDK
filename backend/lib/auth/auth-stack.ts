@@ -1,4 +1,4 @@
-import * as cdk from "aws-cdk-lib/core";
+import { Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import {
   UserPool,
@@ -7,22 +7,45 @@ import {
   UserPoolDomain,
   CfnUserPoolGroup,
 } from "aws-cdk-lib/aws-cognito";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as path from "path";
 
-export class BackendStack extends cdk.Stack {
+interface AuthStackProps extends StackProps {
+  stage: string;
+}
+
+export class AuthStack extends Stack {
   public readonly userPool: UserPool;
   public readonly userPoolClient: UserPoolClient;
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+
+  constructor(scope: Construct, id: string, props: AuthStackProps) {
     super(scope, id, props);
 
+    const { stage } = props;
+    
+     const postConfirmationLambda = new lambda.Function(
+      this,
+      "PostConfirmationLambda",
+      {
+        runtime: lambda.Runtime.NODEJS_18_X,
+        handler: "index.handler",
+        code: lambda.Code.fromAsset(path.join(__dirname, "../../lambda/postConfirmation")), // your lambda folder
+        environment: {
+          USER_TABLE_NAME: "legaldiscover-users-" + stage, // so lambda knows which table
+        },
+      }
+    );
+
     // Create User Pool
-    this.userPool = new UserPool(this, "LegalDiscoverUserPool", {
-      userPoolName: "legal-discover-users",
+    this.userPool = new UserPool(this, `LegalDiscoverUserPool-${stage}`, {
+      userPoolName: `legal-discover-users-${stage}`,
       selfSignUpEnabled: true,
       signInAliases: { email: true },
       autoVerify: { email: true },
       standardAttributes: {
         email: { required: true, mutable: true },
       },
+      lambdaTriggers: { postConfirmation: postConfirmationLambda },
     });
     const groups = ["admin", "attorney", "paralegal", "client"];
 
@@ -35,7 +58,7 @@ export class BackendStack extends cdk.Stack {
     // Create Hosted UI OAuth Client
     this.userPoolClient = new UserPoolClient(
       this,
-      "LegalDiscoverUserPoolClient",
+      `LegalDiscoverUserPoolClient-${stage}`,
       {
         userPool: this.userPool,
         generateSecret: false, // frontend safe
@@ -56,12 +79,16 @@ export class BackendStack extends cdk.Stack {
         },
       }
     );
+   
+
+    // this.userPool.addTrigger( postConfirmationLambda);
+
 
     // Hosted UI Domain
-    new UserPoolDomain(this, "LegalDiscoverDomain", {
+    new UserPoolDomain(this, `LegalDiscoverDomain-${stage}`, {
       userPool: this.userPool,
       cognitoDomain: {
-        domainPrefix: "legaldiscover-" + id.toLowerCase(), // unique
+        domainPrefix: `legaldiscover-${stage}`, // unique
       },
     });
   }
