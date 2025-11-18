@@ -3,29 +3,38 @@ import { Bell, MessageSquare, Plus, ShieldCheck, User } from "lucide-react";
 export const Header = () => {
 
   const actions = [
-    <Plus size={20} />,
-    <MessageSquare size={20} />,
-    <Bell size={20} />
-  ]
-  return (
-    <header className="flex items-center justify-between h-16 w-[84.5%] px-6 border-b border-gray-200">
-      <h2 className="text-xl font-semibold text-gray-900">
-        AI Search
-      </h2>
+    { icon: <Plus size={20} />, label: "Create New" },
+    { icon: <MessageSquare size={20} />, label: "View Messages" },
+    { icon: <Bell size={20} />, label: "View Notifications", badge: 2 },
+  ];
 
-      <div className="flex items-center space-x-4">
-        <div className="flex items-center px-3 py-1.5 rounded-[8px] bg-green-50 text-green-700 text-sm font-medium hover:bg-green-100 transition-colors">
+  return (
+    <header className="flex items-center justify-between h-16 max-w-[83%] w-full px-6 border-b border-gray-200 flex-shrink-0">
+      <div className="flex items-center space-x-6">
+        <h2 className="text-xl font-semibold text-gray-900 flex-shrink-0">
+          AI Search
+        </h2>
+
+        <div className="flex items-center px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-sm font-medium border border-green-200 hover:bg-green-100 transition-colors cursor-default whitespace-nowrap flex-shrink-0">
           <ShieldCheck size={16} className="mr-1" />
           Secure Session
         </div>
+      </div>
+      <div className="flex items-center space-x-4 flex-shrink-0">
 
         <div className="flex items-center space-x-2.5 text-medium-gray">
-          {actions.map((i, index) => (
+          {actions.map((action, index) => (
             <div
               key={index}
-              className="cursor-pointer p-1.5 rounded-full hover:bg-gray-100 hover:text-gray-700 transition-colors"
+              aria-label={action.label}
+              className="relative p-1.5 rounded-full hover:bg-gray-100 hover:text-gray-700 transition-colors"
             >
-              {i}
+              {action.icon}
+              {action.label === "View Messages" && action.badge && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-red-100 bg-red-500 rounded-full transform translate-x-1/2 -translate-y-1/2">
+                  {action.badge}
+                </span>
+              )}
             </div>
           ))}
         </div>

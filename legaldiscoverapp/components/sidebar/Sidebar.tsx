@@ -95,7 +95,7 @@ export const Sidebar = () => {
       )}
 
       <aside
-        className={`fixed md:static top-0 left-0 h-[100vh] w-[17%] z-50 bg-gradient-to-b from-[#1e3a8a] to-[#1e40af] text-white transform transition-transform duration-300 flex flex-col
+        className={`fixed md:static top-0 left-0 h-screen md:h-[100vh] w-72 md:w-[256px] z-50 bg-gradient-to-b from-[#1e3a8a] to-[#1e40af] text-white transform transition-transform duration-300 flex flex-col
           ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
       >
@@ -119,7 +119,7 @@ export const Sidebar = () => {
           />
         </div>
 
-        <div className="px-2 h-[70vh] overflow-y-auto scrollbar-hide">
+        <div className="px-2 overflow-y-auto flex-1 scrollbar-hide">
           {navigationTabs.map((group, idx) => {
             const sectionName = group.section.name;
             const isExpanded = expandedStates[sectionName]
@@ -127,7 +127,7 @@ export const Sidebar = () => {
             return (
               <div key={idx}>
                 <div
-                  className="flex cursor-pointer text-blue-300 hover:text-white items-center mt-[35px] mb-2 px-3"
+                  className="flex cursor-pointer text-[#bfdbfe] hover:text-white items-center py-2 mt-4 mb-2 px-3"
                   onClick={() => handleToggle(sectionName)}
                 >
                   {group.section.icon}
@@ -136,24 +136,27 @@ export const Sidebar = () => {
                   </h3>
 
                   {isExpanded ? (
-                    <ChevronUp size={15} className="ml-auto" />
+                    <ChevronUp size={15} className="ml-auto transition-transform duration-200" />
                   ) : (
-                    <ChevronDown size={15} className="ml-auto" />
+                    <ChevronDown size={15} className="ml-auto transition-transform duration-200" />
                   )}
                 </div>
 
                 {isExpanded &&
-                  group.items.map((item, i) => (
-                    <Link
-                      key={i}
-                      href={item.href}
-                      onClick={() => setMobileOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer text-blue-200 hover:bg-primary-blue hover:text-white`}
-                    >
-                      {item.icon}
-                      <span>{item.label}</span>
-                    </Link>
-                  ))}
+                  <div className="space-y-1">
+                    {group.items.map((item, i) => (
+                      <Link
+                        key={i}
+                        href={item.href}
+                        onClick={() => setMobileOpen(false)}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer text-blue-200 hover:bg-primary-blue hover:text-white`}
+                      >
+                        {item.icon}
+                        <span className="text-sm">{item.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+                }
               </div>
             );
           })}
