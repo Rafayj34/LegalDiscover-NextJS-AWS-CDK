@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Images } from "@/public/assets/index";
-import { CustomImage } from "../common/image";
+import { CustomImage } from "../../common/image";
 import {
   ChevronDown,
   ChevronLeft,
