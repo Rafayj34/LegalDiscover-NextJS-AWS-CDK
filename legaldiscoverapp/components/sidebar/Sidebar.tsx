@@ -51,9 +51,9 @@ export const Sidebar = () => {
       )}
 
       <aside
-        className={`fixed md:static top-0 left-0 h-screen md:h-[100vh] w-72 md:w-[256px] z-50 bg-gradient-to-b from-[#1e3a8a] to-[#1e40af] text-white transform transition-transform duration-300 flex flex-col
-          ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-        `}
+        className={`fixed top-0 left-0 h-screen w-72 md:w-[256px] z-50 bg-gradient-to-b from-[#1e3a8a] to-[#1e40af] text-white transform transition-transform duration-300 flex flex-col md:h-full md:relative 
+          ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        `}
       >
         <div className="flex items-center gap-3 p-4 border-b border-blue-700 flex-shrink-0">
           <div className="bg-white rounded-[8px] w-[32px] h-[32px] p-1.5 flex justify-center items-center">
@@ -75,7 +75,7 @@ export const Sidebar = () => {
           />
         </div>
 
-        <div className="px-2 overflow-y-auto flex-1 scrollbar-hide">
+        <div className="max-h-[72vh] px-2 overflow-y-auto flex-1 scrollbar-hide">
           {navigationTabs.map((group, idx) => {
             const sectionName = group.section.name;
             const isExpanded = expandedStates[sectionName]
