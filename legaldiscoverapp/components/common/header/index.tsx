@@ -1,7 +1,5 @@
-import { Input } from "../../ui/input";
 import { actions } from "@/lib/header-data";
-import { Search, ShieldCheck, User } from "lucide-react";
-import { Button } from "../../ui/button";
+import { ShieldCheck, User } from "lucide-react";
 import { AISearchBar } from "@/components/AISearchBar";
 
 export const Header = () => (
