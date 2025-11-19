@@ -3,7 +3,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@theme inline {
+/* @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -64,13 +64,7 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
-}
-
-
-
-@layer base {
-}
-
+} */
 
 .scrollbar-hide::-webkit-scrollbar {
     display: none;
@@ -79,3 +73,12 @@
 .scrollbar-hide {
     -ms-overflow-style: none;  
 }
+
+/* @layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+} */

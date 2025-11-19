@@ -1,18 +1,17 @@
+import { Input } from "../../ui/input";
 import { actions } from "@/lib/header-data";
-import { ShieldCheck, User } from "lucide-react";
+import { Search, ShieldCheck, User } from "lucide-react";
+import { Button } from "../../ui/button";
+import { AISearchBar } from "@/components/AISearchBar";
 
 export const Header = () => (
-  <header className="flex items-center justify-between h-16 px-6 border-b border-gray-200 flex-shrink-0"> <div className="flex items-center space-x-6">
-    <h2 className="text-xl font-semibold text-gray-900 flex-shrink-0">
-      AI Search
-    </h2>
-
-    <div className="flex items-center px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-sm font-medium border border-green-200 hover:bg-green-100 transition-colors cursor-default whitespace-nowrap flex-shrink-0">
-      <ShieldCheck size={16} className="mr-1" />
-      Secure Session
-    </div>
-  </div>
+  <header className="flex items-center justify-between h-16 px-6 border-b border-gray-200 flex-shrink-0">
+    <AISearchBar />
     <div className="flex items-center space-x-4 flex-shrink-0">
+      <div className="flex items-center px-3 py-1.5 rounded-[10px] bg-green-50 text-green-700 text-sm font-medium border border-green-200 hover:bg-green-100">
+        <ShieldCheck size={16} className="mr-1" />
+        Secure Session
+      </div>
 
       <div className="flex items-center space-x-2.5 text-medium-gray">
         {actions.map((action, index) => (
