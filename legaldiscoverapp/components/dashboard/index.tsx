@@ -39,7 +39,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
 };
 
 export const Dashboard = () => (
-    <div className="p-4 sm:p-8 space-y-8 bg-gray-50 h-[91vh] overflow-y-scroll">
+    <div className="p-4 sm:p-[24px] space-y-6 bg-gray-50 h-[91vh] overflow-y-scroll">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
             <div className="bg-white flex justify-between w-full p-4 shadow-md">
                 <div>

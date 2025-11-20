@@ -5,8 +5,8 @@ import { caseDistributionData, revenueTrendData, systemMetricsData } from "@/lib
 
 const MetricCard: React.FC<MetricsItem> = ({ value, label, color }) => (
   <div className="flex flex-col items-center">
-    <span className={`text-4xl font-bold mb-1 ${color}`}>{value}</span>
-    <span className="text-gray-500 text-sm">{label}</span>
+    <span className={`text-3xl font-bold ${color}`}>{value}</span>
+    <span className="text-sm text-gray-600 mt-1">{label}</span>
   </div>
 );
 
@@ -15,18 +15,15 @@ const ProgressBar: React.FC<CaseDistributionItem> = ({
   count,
   percentage,
 }) => (
-  <div className="text-sm">
-    <div className="flex justify-between items-center mb-1">
-      <span className="text-gray-700">{label}</span>
-      <span className="font-semibold text-gray-800">{count}</span>
-    </div>
-
-    <div className="w-full bg-gray-200 rounded-full h-2">
+  <div className="flex items-center">
+    <span className="text-sm font-medium text-gray-700 w-32">{label}</span>
+    <div className="w-[70%] bg-gray-200 rounded-full h-2">
       <div
         className="h-2 rounded-full bg-blue-600"
         style={{ width: `${percentage}%` }}
       />
     </div>
+    <span className="text-sm font-bold text-gray-900 w-12 text-right">{count}</span>
   </div>
 );
 
@@ -59,14 +56,14 @@ const SystemMetricsOverview: React.FC<SystemMetricsOverviewProps> = ({
   metrics,
 }) => (
   <div className="bg-white p-6 rounded-xl shadow-lg border border-light-gray">
-    <div className="flex items-center justify-between mb-8">
+    <div className="flex items-center justify-between mb-[24px]">
       <h2 className="text-xl font-semibold text-gray-800 flex items-center">
         <ActivityIcon className="h-5 w-5 text-blue-600 mr-2" />
         Live System Metrics
       </h2>
 
-      <div className="flex items-center text-green-600 font-medium">
-        <span className="h-2 w-2 rounded-full bg-green-500 mr-2" />
+      <div className="flex items-center text-sm text-green-600">
+        <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse mr-2" />
         All Systems Operational
       </div>
     </div>
@@ -88,8 +85,8 @@ const CaseDistributionCard: React.FC<CaseDistributionCardProps> = ({
 }) => (
   <div className="bg-white p-6 rounded-xl shadow-lg border border-light-gray w-full flex flex-col">
     <div className="flex items-center justify-between mb-6">
-      <h2 className="text-xl font-semibold text-gray-800">Case Distribution</h2>
-      <ChartPie className="text-gray-400 cursor-pointer" />
+      <h2 className="text-xl font-bold text-gray-900">Case Distribution</h2>
+      <ChartPie className="h-5 w-5 text-gray-400 cursor-pointer" />
     </div>
 
     <div className="space-y-4">
@@ -109,8 +106,8 @@ const RevenueTrendCard: React.FC<RevenueTrendCardProps> = ({
 }) => (
   <div className="bg-white p-6 rounded-xl shadow-lg border border-light-gray w-full flex flex-col">
     <div className="flex items-center justify-between mb-6">
-      <h2 className="text-xl font-semibold text-gray-800">Revenue Trend</h2>
-      <BarChart3 className="h-6 w-6 text-gray-400 cursor-pointer" />
+      <h2 className="text-xl font-bold text-gray-900">Revenue Trend</h2>
+      <BarChart3 className="h-5 w-5 text-gray-400 cursor-pointer" />
     </div>
 
     <div className="space-y-4">
