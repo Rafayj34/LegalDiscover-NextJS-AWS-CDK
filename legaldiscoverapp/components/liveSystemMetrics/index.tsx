@@ -17,9 +17,9 @@ const ProgressBar: React.FC<CaseDistributionItem> = ({
 }) => (
   <div className="flex items-center">
     <span className="text-sm font-medium text-gray-700 w-32">{label}</span>
-    <div className="w-[70%] bg-gray-200 rounded-full h-2">
+    <div className="h-2 bg-gray-200 rounded-full overflow-hidden w-[70%]">
       <div
-        className="h-2 rounded-full bg-blue-600"
+        className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full"
         style={{ width: `${percentage}%` }}
       />
     </div>
@@ -33,16 +33,15 @@ const DataBarChartItem: React.FC<RevenueTrendItem> = ({
   percentage,
 }) => (
   <div className="flex items-center space-x-3">
-    <span className="w-10 text-sm text-gray-500">{month}</span>
-
-    <div className="flex-1 bg-gray-200 rounded-full h-3 relative">
+    <span className="text-sm font-medium text-gray-700 w-12">{month}</span>
+    <div className="flex-1 bg-gray-200 rounded h-6 relative">
       <div
-        className="h-3 rounded-full bg-green-500"
+        className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded"
         style={{ width: `${percentage}%` }}
       />
     </div>
 
-    <span className="w-10 text-sm font-medium text-gray-800 text-right">
+    <span className="text-sm font-bold text-gray-900 w-20 text-right">
       {amount}
     </span>
   </div>
