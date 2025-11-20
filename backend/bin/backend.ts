@@ -8,14 +8,17 @@ const app = new cdk.App();
 const stage = app.node.tryGetContext("stage") || "dev";
 const env = { region: "us-east-1" };
 
-// Auth Stack (Cognito)
-new AuthStack(app, `AuthStack-${stage}`, {
+
+// Database Stack (DynamoDB)
+const database = new DatabaseStack(app, `DatabaseStack-${stage}`, {
   env,
   stage,
 });
 
-// Database Stack (DynamoDB)
-new DatabaseStack(app, `DatabaseStack-${stage}`, {
+// Auth Stack (Cognito)
+new AuthStack(app, `AuthStack-${stage}`, {
   env,
   stage,
+  userTable: database.userTable,
+  
 });

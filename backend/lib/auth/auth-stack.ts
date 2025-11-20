@@ -9,9 +9,12 @@ import {
 } from "aws-cdk-lib/aws-cognito";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
+import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import { Table } from "aws-cdk-lib/aws-dynamodb";
 
 interface AuthStackProps extends StackProps {
   stage: string;
+  userTable: Table;
 }
 
 export class AuthStack extends Stack {
@@ -22,19 +25,23 @@ export class AuthStack extends Stack {
     super(scope, id, props);
 
     const { stage } = props;
-    
-     const postConfirmationLambda = new lambda.Function(
+
+    const postConfirmationLambda = new NodejsFunction(
       this,
       "PostConfirmationLambda",
       {
-        runtime: lambda.Runtime.NODEJS_18_X,
-        handler: "index.handler",
-        code: lambda.Code.fromAsset(path.join(__dirname, "../../lambda/postConfirmation")), // your lambda folder
+        runtime: lambda.Runtime.NODEJS_20_X,
+        entry: path.join(__dirname, "../../lambda/postConfirmation/index.ts"), // your lambda folder
+        handler: "handler",
         environment: {
           USER_TABLE_NAME: "legaldiscover-users-" + stage, // so lambda knows which table
         },
+        // bundling: {
+        //   externalModules: ["aws-sdk"],
+        // },
       }
     );
+    props.userTable.grantReadWriteData(postConfirmationLambda);
 
     // Create User Pool
     this.userPool = new UserPool(this, `LegalDiscoverUserPool-${stage}`, {
@@ -63,9 +70,7 @@ export class AuthStack extends Stack {
         userPool: this.userPool,
         generateSecret: false, // frontend safe
         oAuth: {
-          callbackUrls: [
-            "http://localhost:3000/api/auth/callback", // YOUR NEXT.JS CALLBACK
-          ],
+          callbackUrls: ["http://localhost:3000/api/auth/callback"],
           logoutUrls: ["http://localhost:3000"],
           flows: {
             implicitCodeGrant: true,
@@ -79,10 +84,8 @@ export class AuthStack extends Stack {
         },
       }
     );
-   
 
     // this.userPool.addTrigger( postConfirmationLambda);
-
 
     // Hosted UI Domain
     new UserPoolDomain(this, `LegalDiscoverDomain-${stage}`, {
@@ -93,3 +96,15 @@ export class AuthStack extends Stack {
     });
   }
 }
+//  const postConfirmationLambda = new lambda.Function(
+//   this,
+//   "PostConfirmationLambda",
+//   {
+//     runtime: lambda.Runtime.NODEJS_18_X,
+//     handler: "index.handler",
+//     code: lambda.Code.fromAsset(path.join(__dirname, "../../lambda/postConfirmation")), // your lambda folder
+//     environment: {
+//       USER_TABLE_NAME: "legaldiscover-users-" + stage, // so lambda knows which table
+//     },
+//   }
+// );

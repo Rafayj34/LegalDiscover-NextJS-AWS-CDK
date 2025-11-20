@@ -1,24 +1,23 @@
-import { DynamoDB } from "aws-sdk";
+import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 
-const db = new DynamoDB.DocumentClient();
+const client = new DynamoDBClient({});
 
-export const handler = async (event: any) => {
-  console.log("PostConfirmation event:", event);
-
+export const handler = async (event : any) => {
   const { userName, request } = event;
-
+  
   const email = request.userAttributes.email;
 
-  await db
-    .put({
+  await client.send(
+    new PutItemCommand({
       TableName: process.env.USER_TABLE_NAME!,
       Item: {
-        userId: userName,
-        email,
-        createdAt: new Date().toISOString(),
+        userId: { S: userName },
+        email: { S: email },
+        role: { S: "admin" },
+        createdAt: { S: new Date().toISOString() },
       },
     })
-    .promise();
+  );
 
   return event;
 };
