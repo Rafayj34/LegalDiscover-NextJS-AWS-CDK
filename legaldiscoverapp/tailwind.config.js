@@ -11,7 +11,9 @@ module.exports = {
 			colors: {
 				'primary-blue': '#1D4ED8',
 				'accent': '#2563EB',
+				"light-gray": "#f3f4f6",
 				'medium-gray': '#6b7280',
+				'cool-gray': '#6b7280',
 			},
 			fontFamily: {
 				sans: [

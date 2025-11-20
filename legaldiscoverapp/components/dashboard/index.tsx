@@ -16,7 +16,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
     const changeColor = 'text-green-500';
 
     return (
-        <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-2xl">
+        <div className="bg-white rounded-xl shadow-xl border border-light-gray overflow-hidden transition-all duration-300 hover:shadow-2xl">
             <div className={`h-2 ${accentColor}`}></div>
 
             <div className="p-6 space-y-4">
@@ -27,7 +27,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
                     <ArrowUp className={`w-5 h-5 ${changeColor}`} />
                 </div>
                 <div className="pt-2 space-y-1">
-                    <h3 className="text-base font-medium text-gray-500">{title}</h3>
+                    <h3 className="text-base font-medium text-cool-gray">{title}</h3>
                     <p className="text-4xl font-extrabold text-gray-900">{value}</p>
                 </div>
 
@@ -83,9 +83,10 @@ export const Dashboard = () => {
                 ))}
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 min-h-[300px] mt-8">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Case Activity Log</h2>
-                <p className="text-gray-500">Detailed logs for recent case updates will appear here.</p>
+            <div className="bg-white p-6 rounded-xl shadow-lg border border-light-gray min-h-[300px] mt-8">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">Live System Metrics
+                </h2>
+                <p className="text-cool-gray">Detailed logs for recent case updates will appear here.</p>
             </div>
 
         </div>

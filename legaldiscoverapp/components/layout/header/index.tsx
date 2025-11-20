@@ -16,7 +16,7 @@ export const Header = () => (
           <div
             key={index}
             aria-label={action.label}
-            className="relative p-1.5 rounded-full hover:bg-gray-100 hover:text-gray-700 transition-colors"
+            className="relative p-1.5 rounded-full hover:bg-light-gray hover:text-gray-700 transition-colors"
           >
             {action.icon}
             {action.label === "View Messages" && action.badge && (
