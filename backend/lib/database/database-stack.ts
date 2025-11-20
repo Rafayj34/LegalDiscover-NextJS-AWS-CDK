@@ -1,10 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
-import {
-  Table,
-  AttributeType,
-  BillingMode,
-} from "aws-cdk-lib/aws-dynamodb";
+import { Table, AttributeType, BillingMode } from "aws-cdk-lib/aws-dynamodb";
 
 interface DatabaseStackProps extends cdk.StackProps {
   stage: string;
@@ -12,6 +8,7 @@ interface DatabaseStackProps extends cdk.StackProps {
 
 export class DatabaseStack extends cdk.Stack {
   public readonly userTable: Table;
+  public readonly mattersTable: Table;
 
   constructor(scope: Construct, id: string, props: DatabaseStackProps) {
     super(scope, id, props);
@@ -24,6 +21,12 @@ export class DatabaseStack extends cdk.Stack {
       billingMode: BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
-   
+
+    this.mattersTable = new Table(this, `MattersTable-${stage}`, {
+      tableName: `legaldiscover-matters-${stage}`,
+      partitionKey: { name: "matterId", type: AttributeType.STRING },
+      billingMode: BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,      
+    });
   }
 }
