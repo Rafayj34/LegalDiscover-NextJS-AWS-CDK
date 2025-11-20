@@ -59,7 +59,7 @@ export const Dashboard = () => {
                         >
                             This Month
                         </Button>
-                        <RefreshCw className="w-5 h-5 mr-2" />
+                        <RefreshCw className="cursor-pointer w-5 h-5 mr-2" />
                         <Button
                             className="bg-accent text-white hover:bg-indigo-700 shadow-indigo-500/50 flex items-center"
                         >
