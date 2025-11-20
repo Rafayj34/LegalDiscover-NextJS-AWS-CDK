@@ -1,15 +1,22 @@
 import { create } from "zustand";
-
+interface User {
+    id: string;
+    email: string;
+    name?: string;
+}
 interface AuthStore {
-    // count: number
-    // increament: () => void;
-    // decreament: () => void;
+    user: User | null;
+    login: (userData: User) => void;
+    logout: () => void;
 }
-export const useAuthStore = create<AuthStore>((set, get) => ({
-    // states
-    // count: 0,
-    // functions
-    // increament: () => set((state) => ({ count: state.count + 1 })),
-    // decreament: () => set((state) => ({ count: state.count - 1 }))
-}
-))
+
+export const useAuthStore = create<AuthStore>((set) => ({
+    user: null,
+    login: (userData) => {
+        set({ user: userData });
+    },
+
+    logout: () => {
+        set({ user: null });
+    }
+}));
