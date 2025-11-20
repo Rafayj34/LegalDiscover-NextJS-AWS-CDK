@@ -131,10 +131,13 @@ export const Sidebar = () => {
                         key={i}
                         href={item.href}
                         onClick={() => setMobileOpen(false)}
-                        className={`flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-2 rounded-lg cursor-pointer text-blue-200 hover:bg-primary-blue hover:text-white`}
+                        className={`flex justify-between items-center ${isCollapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-[14px] rounded-lg cursor-pointer text-blue-200 hover:bg-[#1d4fd884] hover:text-white`}
                       >
-                        {item.icon}
-                        <span className={`text-sm ${hiddenWhenCollapsed}`}>{item.label}</span>
+                        <div className="flex items-center">
+                          {item.icon}
+                          <span className={`ml-[15px] font-medium text-blue-100 ${hiddenWhenCollapsed}`}>{item.label}</span>
+                        </div>
+                        {item.label === "AI Consultant" && <span className={`rounded-[9.5px] px-[6px] py-[2px] bg-accent text-[12px] ${hiddenWhenCollapsed}`}>AI</span>}
                       </Link>
                     ))}
                   </div>

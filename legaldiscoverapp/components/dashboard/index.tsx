@@ -4,6 +4,7 @@ import React from 'react';
 import { Button } from '../ui/button';
 import { metricData } from '@/lib/dashboard-data';
 import { MetricCardProps } from '@/types/dashboatd';
+import { LiveSystemMetrics } from '../liveSystemMetrics';
 import { ArrowUp, RefreshCw, Download } from 'lucide-react';
 
 const MetricCard: React.FC<MetricCardProps> = ({
@@ -43,7 +44,7 @@ export const Dashboard = () => {
     return (
         <div className="p-4 sm:p-8 space-y-8 bg-gray-50 h-[91vh] overflow-y-scroll">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-                <div className="bg-white flex justify-between w-full p-6 shadow-md">
+                <div className="bg-white flex justify-between w-full p-4 shadow-md">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 flex items-center mb-4 md:mb-0">
                             Welcome back, Dev!
@@ -59,7 +60,7 @@ export const Dashboard = () => {
                         >
                             This Month
                         </Button>
-                        <RefreshCw className="cursor-pointer w-5 h-5 mr-2" />
+                        <RefreshCw className="cursor-pointer text-cool-gray w-5 h-5 mr-2" />
                         <Button
                             className="bg-accent text-white hover:bg-indigo-700 shadow-indigo-500/50 flex items-center"
                         >
@@ -82,13 +83,7 @@ export const Dashboard = () => {
                     />
                 ))}
             </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-lg border border-light-gray min-h-[300px] mt-8">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Live System Metrics
-                </h2>
-                <p className="text-cool-gray">Detailed logs for recent case updates will appear here.</p>
-            </div>
-
+            <LiveSystemMetrics />
         </div>
     );
 };
