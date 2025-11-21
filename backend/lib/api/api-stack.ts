@@ -25,12 +25,13 @@ export class ApiStack extends Stack {
 
     const userApiLambda = new NodejsFunction(this, `UserApiLambda-${stage}`, {
       entry: "lambda/users/userApiLambda.ts",
+      functionName: `UserApiLambda-${stage}`,
       handler: "handler",
       environment: {
         TABLE_NAME: userTable.tableName,
       },
       bundling: {
-           externalModules: ["@aws-sdk/client-dynamodb", "uuid"], 
+           externalModules: ["@aws-sdk/client-dynamodb"], 
         },
     });
 
@@ -53,12 +54,13 @@ export class ApiStack extends Stack {
       `MatterApiLambda-${stage}`,
       {
         entry: "lambda/matters/matterApiLambda.ts",
+        functionName: `MatterApiLambda-${stage}`,
         handler: "handler",
         environment: {
           TABLE_NAME: mattersTable.tableName,
         },
         bundling: {
-           externalModules: ["@aws-sdk/client-dynamodb", "uuid"], 
+           externalModules: ["@aws-sdk/client-dynamodb"], 
         },
       }
     );
