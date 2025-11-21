@@ -9,6 +9,7 @@ interface DatabaseStackProps extends cdk.StackProps {
 export class DatabaseStack extends cdk.Stack {
   public readonly userTable: Table;
   public readonly mattersTable: Table;
+  public readonly tenantsTable: Table;
 
   constructor(scope: Construct, id: string, props: DatabaseStackProps) {
     super(scope, id, props);
@@ -19,14 +20,21 @@ export class DatabaseStack extends cdk.Stack {
       tableName: `legaldiscover-users-${stage}`,
       partitionKey: { name: "userId", type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     this.mattersTable = new Table(this, `MattersTable-${stage}`, {
       tableName: `legaldiscover-matters-${stage}`,
       partitionKey: { name: "matterId", type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,      
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    this.tenantsTable = new Table(this, `TenantsTable-${stage}`, {
+      tableName: `legaldiscover-tenants-${stage}`,
+      partitionKey: { name: "tenantId", type: AttributeType.STRING },
+      billingMode: BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
   }
 }

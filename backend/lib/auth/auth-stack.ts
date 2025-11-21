@@ -6,6 +6,7 @@ import {
   OAuthScope,
   UserPoolDomain,
   CfnUserPoolGroup,
+  StringAttribute,
 } from "aws-cdk-lib/aws-cognito";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
@@ -36,9 +37,6 @@ export class AuthStack extends Stack {
         environment: {
           USER_TABLE_NAME: "legaldiscover-users-" + stage, // so lambda knows which table
         },
-        // bundling: {
-        //   externalModules: ["aws-sdk"],
-        // },
       }
     );
     props.userTable.grantReadWriteData(postConfirmationLambda);
@@ -52,9 +50,21 @@ export class AuthStack extends Stack {
       standardAttributes: {
         email: { required: true, mutable: true },
       },
+      customAttributes: {
+        address: new StringAttribute({ mutable: true }),
+        phone: new StringAttribute({ mutable: true }),
+        company: new StringAttribute({ mutable: true }),
+      },
       lambdaTriggers: { postConfirmation: postConfirmationLambda },
     });
-    const groups = ["admin", "attorney", "paralegal", "client"];
+    const groups = [
+      "admin",
+      "client",
+      "secretary",
+      "paralegal",
+      "associate",
+      "partner",
+    ];
 
     groups.forEach((group) => {
       new CfnUserPoolGroup(this, `${group}Group`, {

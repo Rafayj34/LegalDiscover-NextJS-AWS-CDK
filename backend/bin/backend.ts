@@ -28,4 +28,5 @@ new ApiStack(app, `ApiStack-${stage}`, {
   stage,
   userTable: database.userTable,
   mattersTable: database.mattersTable,
+  tenantsTable: database.tenantsTable
 });
