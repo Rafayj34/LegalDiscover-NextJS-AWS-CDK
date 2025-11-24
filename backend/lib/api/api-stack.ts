@@ -1,14 +1,23 @@
 import { StackProps, Stack } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { Table } from "aws-cdk-lib/aws-dynamodb";
-import { LambdaIntegration, RestApi, Stage, Deployment } from "aws-cdk-lib/aws-apigateway";
+import {
+  LambdaIntegration,
+  RestApi,
+  Stage,
+  Deployment,
+} from "aws-cdk-lib/aws-apigateway";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import { CognitoUserPoolsAuthorizer } from "aws-cdk-lib/aws-apigateway";
+import { UserPool } from "aws-cdk-lib/aws-cognito";
 
 interface ApiStackProps extends StackProps {
   stage: string;
   userTable: Table;
   mattersTable: Table;
   tenantsTable: Table;
+  userPoolId: string;
 }
 
 export class ApiStack extends Stack {
@@ -17,16 +26,33 @@ export class ApiStack extends Stack {
 
     const { userTable, mattersTable, tenantsTable, stage } = props;
 
-    // API Gateway and Lambda setup would go here, utilizing userTable and mattersTable as needed.
-
-    // --------------------------- For Users ----------------------------
-    const UsersApi = new RestApi(this, `LegalDiscover-UsersApi-${stage}`, {
-      restApiName: "CRUD for Users",
-      deploy: false,
+    const userPool = UserPool.fromUserPoolId(
+      this,
+      "ImportedUserPool",
+      props.userPoolId
+    );
+    const authorizer = new CognitoUserPoolsAuthorizer(this, "ApiAuthorizer", {
+      cognitoUserPools: [userPool],
+      identitySource: "method.request.header.Authorization",
     });
+    // // API Gateway and Lambda setup would go here, utilizing userTable and mattersTable as needed.
+    const api = new RestApi(this, `LegalDiscoverApi-${stage}`, {
+      restApiName: `LegalDiscoverApi-${stage}`,
+      deployOptions: {
+        stageName: stage,
+      },
+      defaultCorsPreflightOptions: {
+        allowOrigins: ["*"], // or your domain
+        allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowHeaders: ["*"],
+      },
+    });
+    // // --------------------------- For Users ----------------------------
 
     const userApiLambda = new NodejsFunction(this, `UserApiLambda-${stage}`, {
       entry: "lambda/users/userApiLambda.ts",
+      runtime: lambda.Runtime.NODEJS_20_X,
+
       functionName: `UserApiLambda-${stage}`,
       handler: "handler",
       environment: {
@@ -39,23 +65,20 @@ export class ApiStack extends Stack {
 
     userTable.grantReadWriteData(userApiLambda);
 
-    const users = UsersApi.root.addResource("users");
+    const users = api.root.addResource("users");
     users.addMethod("POST", new LambdaIntegration(userApiLambda));
     const user = users.addResource("{id}");
     user.addMethod("GET", new LambdaIntegration(userApiLambda));
     user.addMethod("PUT", new LambdaIntegration(userApiLambda));
     user.addMethod("DELETE", new LambdaIntegration(userApiLambda));
 
-    // --------------------------- For Matters ----------------------------
-    const MattersApi = new RestApi(this, `LegalDiscover-MattersApi-${stage}`, {
-      restApiName: "CRUD for Matters",
-      deploy: false,
-    });
+    // // --------------------------- For Matters ----------------------------
 
     const matterApiLambda = new NodejsFunction(
       this,
       `MatterApiLambda-${stage}`,
       {
+        runtime: lambda.Runtime.NODEJS_20_X,
         entry: "lambda/matters/matterApiLambda.ts",
         functionName: `MatterApiLambda-${stage}`,
         handler: "handler",
@@ -69,24 +92,21 @@ export class ApiStack extends Stack {
     );
     mattersTable.grantReadWriteData(matterApiLambda);
 
-    const matters = MattersApi.root.addResource("matters");
+    const matters = api.root.addResource("matters");
+    matters.addMethod("GET", new LambdaIntegration(matterApiLambda));
     matters.addMethod("POST", new LambdaIntegration(matterApiLambda));
     const matter = matters.addResource("{id}");
     matter.addMethod("GET", new LambdaIntegration(matterApiLambda));
     matter.addMethod("PUT", new LambdaIntegration(matterApiLambda));
     matter.addMethod("DELETE", new LambdaIntegration(matterApiLambda));
 
-    // --------------------------- For Tenants ----------------------------
-
-    const TenantsApi = new RestApi(this, `LegalDiscover-TenantsApi-${stage}`, {
-      restApiName: "CRUD for Tenants",
-      deploy: false,
-    });
+    // // --------------------------- For Tenants ----------------------------
 
     const tenantApiLambda = new NodejsFunction(
       this,
       `TenantApiLambda-${stage}`,
       {
+        runtime: lambda.Runtime.NODEJS_20_X,
         functionName: `TennantApiLambda-${stage}`,
         entry: "lambda/tenants/tenantsApiLambda.ts",
         handler: "handler",
@@ -100,36 +120,11 @@ export class ApiStack extends Stack {
     );
     tenantsTable.grantReadWriteData(tenantApiLambda);
 
-    const tenants = TenantsApi.root.addResource("tenants");
+    const tenants = api.root.addResource("tenants");
     tenants.addMethod("POST", new LambdaIntegration(tenantApiLambda));
     const tenant = tenants.addResource("{id}");
     tenant.addMethod("GET", new LambdaIntegration(tenantApiLambda));
     tenant.addMethod("PUT", new LambdaIntegration(tenantApiLambda));
     tenant.addMethod("DELETE", new LambdaIntegration(tenantApiLambda));
-
-    // Create deployments with custom stage names
-    const usersDeployment = new Deployment(this, `UsersApiDeployment-${stage}`, {
-      api: UsersApi,
-    });
-    new Stage(this, `UsersApiStage-${stage}`, {
-      deployment: usersDeployment,
-      stageName: stage,
-    });
-
-    const mattersDeployment = new Deployment(this, `MattersApiDeployment-${stage}`, {
-      api: MattersApi,
-    });
-    new Stage(this, `MattersApiStage-${stage}`, {
-      deployment: mattersDeployment,
-      stageName: stage,
-    });
-
-    const tenantsDeployment = new Deployment(this, `TenantsApiDeployment-${stage}`, {
-      api: TenantsApi,
-    });
-    new Stage(this, `TenantsApiStage-${stage}`, {
-      deployment: tenantsDeployment,
-      stageName: stage,
-    });
   }
 }

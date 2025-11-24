@@ -28,5 +28,6 @@ new ApiStack(app, `ApiStack-${stage}`, {
   stage,
   userTable: database.userTable,
   mattersTable: database.mattersTable,
-  tenantsTable: database.tenantsTable
+  tenantsTable: database.tenantsTable,
+  userPoolId: cdk.Fn.importValue(`UserPoolId-${stage}`),
 });

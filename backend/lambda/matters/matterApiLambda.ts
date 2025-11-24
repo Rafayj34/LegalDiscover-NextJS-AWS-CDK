@@ -2,6 +2,7 @@ import {
   DynamoDBClient,
   GetItemCommand,
   PutItemCommand,
+  ScanCommand,
 } from "@aws-sdk/client-dynamodb";
 import { v4 as uuid } from "uuid";
 
@@ -52,6 +53,21 @@ export const handler = async (event: any) => {
       };
 
     case "GET":
+      if (!id) {
+        try {
+          const result = await client.send(
+            new ScanCommand({
+              TableName: tableName,
+            })
+          );
+          return {
+            statusCode: 200,
+            body: JSON.stringify(result.Items),
+          };
+        } catch (error) {
+          return { statusCode: 500, body: "Could not retrieve matter" };
+        }
+      }
       try {
         // 2️⃣ Get item from DynamoDB
         const result = await client.send(
@@ -86,16 +102,16 @@ export const handler = async (event: any) => {
         new PutItemCommand({
           TableName: tableName,
           Item: {
-          matterId: { S: uuid() },
-              title: { S: updateData.title || "" },
-              status: { S: updateData.status },
-              clientId: { S: updateData.clientId },
-              clientName: { S: updateData.clientName },
-              caseType: { S: updateData.caseType },
-              priority: { S: updateData.priority },
-              description: { S: updateData.description || "" },
-              assignedAttorney: { S: updateData.assignedAttorney || "" },
-              updatedAt: { S: new Date().toISOString() },
+            matterId: { S: uuid() },
+            title: { S: updateData.title || "" },
+            status: { S: updateData.status },
+            clientId: { S: updateData.clientId },
+            clientName: { S: updateData.clientName },
+            caseType: { S: updateData.caseType },
+            priority: { S: updateData.priority },
+            description: { S: updateData.description || "" },
+            assignedAttorney: { S: updateData.assignedAttorney || "" },
+            updatedAt: { S: new Date().toISOString() },
           },
         })
       );
