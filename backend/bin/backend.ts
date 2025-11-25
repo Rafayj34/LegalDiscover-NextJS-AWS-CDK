@@ -16,7 +16,7 @@ const database = new DatabaseStack(app, `DatabaseStack-${stage}`, {
 });
 
 // Auth Stack (Cognito)
-new AuthStack(app, `AuthStack-${stage}`, {
+const auth = new AuthStack(app, `AuthStack-${stage}`, {
   env,
   stage,
   userTable: database.userTable,
@@ -29,5 +29,5 @@ new ApiStack(app, `ApiStack-${stage}`, {
   userTable: database.userTable,
   mattersTable: database.mattersTable,
   tenantsTable: database.tenantsTable,
-  userPoolId: cdk.Fn.importValue(`UserPoolId-${stage}`),
+  userPoolId: auth.userPool.userPoolId,
 });

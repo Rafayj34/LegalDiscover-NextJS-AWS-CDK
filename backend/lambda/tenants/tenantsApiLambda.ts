@@ -3,8 +3,8 @@ import {
   GetItemCommand,
   PutItemCommand,
 } from "@aws-sdk/client-dynamodb";
-import { Domain } from "domain";
 import { v4 as uuid } from "uuid";
+import { unmarshall } from "@aws-sdk/util-dynamodb";
 
 const client = new DynamoDBClient({});
 const tableName = process.env.TABLE_NAME!;
@@ -62,9 +62,13 @@ export const handler = async (event: any) => {
             },
           })
         );
+        const item = result.Item;
+        if (!item) {
+          return { statusCode: 404, body: "Tenant not found" };
+        }
         return {
           statusCode: 200,
-          body: JSON.stringify(result.Item),
+          body: JSON.stringify(unmarshall(item)),
         };
       } catch (error) {
         return { statusCode: 500, body: "Could not retrieve tenant" };

@@ -4,12 +4,11 @@ import { Table } from "aws-cdk-lib/aws-dynamodb";
 import {
   LambdaIntegration,
   RestApi,
-  Stage,
-  Deployment,
+  AuthorizationType,
+  CognitoUserPoolsAuthorizer,
 } from "aws-cdk-lib/aws-apigateway";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import { CognitoUserPoolsAuthorizer } from "aws-cdk-lib/aws-apigateway";
 import { UserPool } from "aws-cdk-lib/aws-cognito";
 
 interface ApiStackProps extends StackProps {
@@ -31,7 +30,8 @@ export class ApiStack extends Stack {
       "ImportedUserPool",
       props.userPoolId
     );
-    const authorizer = new CognitoUserPoolsAuthorizer(this, "ApiAuthorizer", {
+
+   const authorizer = new CognitoUserPoolsAuthorizer(this, "ApiAuthorizer", {
       cognitoUserPools: [userPool],
       identitySource: "method.request.header.Authorization",
     });
@@ -44,9 +44,19 @@ export class ApiStack extends Stack {
       defaultCorsPreflightOptions: {
         allowOrigins: ["*"], // or your domain
         allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowHeaders: ["*"],
+        allowHeaders: ["Authorization", "Content-Type"],
       },
+      defaultMethodOptions: {
+        authorizer: authorizer,
+        authorizationType: AuthorizationType.COGNITO,
+      },
+     
     });
+     
+
+    authorizer._attachToApi(api);
+    
+
     // // --------------------------- For Users ----------------------------
 
     const userApiLambda = new NodejsFunction(this, `UserApiLambda-${stage}`, {
