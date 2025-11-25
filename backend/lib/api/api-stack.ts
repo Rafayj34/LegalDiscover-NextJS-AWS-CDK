@@ -6,6 +6,8 @@ import {
   RestApi,
   AuthorizationType,
   CognitoUserPoolsAuthorizer,
+  ResponseType,
+  Cors,
 } from "aws-cdk-lib/aws-apigateway";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -31,7 +33,7 @@ export class ApiStack extends Stack {
       props.userPoolId
     );
 
-   const authorizer = new CognitoUserPoolsAuthorizer(this, "ApiAuthorizer", {
+    const authorizer = new CognitoUserPoolsAuthorizer(this, "ApiAuthorizer", {
       cognitoUserPools: [userPool],
       identitySource: "method.request.header.Authorization",
     });
@@ -42,20 +44,35 @@ export class ApiStack extends Stack {
         stageName: stage,
       },
       defaultCorsPreflightOptions: {
-        allowOrigins: ["*"], // or your domain
-        allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowHeaders: ["Authorization", "Content-Type"],
+        allowOrigins: Cors.ALL_ORIGINS, // or your domain
+        allowMethods: Cors.ALL_METHODS,
       },
       defaultMethodOptions: {
         authorizer: authorizer,
         authorizationType: AuthorizationType.COGNITO,
       },
-     
     });
-     
 
     authorizer._attachToApi(api);
-    
+
+    // // GLOBAL CORS HEADERS FOR ALL RESPONSES
+    // api.addGatewayResponse("Default4xx", {
+    //   type: ResponseType.DEFAULT_4XX,
+    //   responseHeaders: {
+    //     "Access-Control-Allow-Origin": "'*'",
+    //     "Access-Control-Allow-Headers": "'*'",
+    //     "Access-Control-Allow-Methods": "'*'",
+    //   },
+    // });
+
+    // api.addGatewayResponse("Default5xx", {
+    //   type: ResponseType.DEFAULT_5XX,
+    //   responseHeaders: {
+    //     "Access-Control-Allow-Origin": "'*'",
+    //     "Access-Control-Allow-Headers": "'*'",
+    //     "Access-Control-Allow-Methods": "'*'",
+    //   },
+    // });
 
     // // --------------------------- For Users ----------------------------
 

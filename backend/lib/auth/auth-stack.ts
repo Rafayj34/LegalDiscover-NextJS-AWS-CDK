@@ -51,6 +51,7 @@ export class AuthStack extends Stack {
         email: { required: true, mutable: true },
       },
       customAttributes: {
+        name: new StringAttribute({ mutable: true }),
         address: new StringAttribute({ mutable: true }),
         phone: new StringAttribute({ mutable: true }),
         company: new StringAttribute({ mutable: true }),

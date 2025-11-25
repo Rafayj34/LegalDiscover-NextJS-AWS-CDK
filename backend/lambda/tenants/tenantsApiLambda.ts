@@ -5,31 +5,33 @@ import {
 } from "@aws-sdk/client-dynamodb";
 import { v4 as uuid } from "uuid";
 import { unmarshall } from "@aws-sdk/util-dynamodb";
+import lambdaResponse from "../../utils/response";
 
 const client = new DynamoDBClient({});
 const tableName = process.env.TABLE_NAME!;
 
 export const handler = async (event: any) => {
   const id = event.pathParameters?.id;
+  const tenantId = "defaultTenant";
 
   switch (event.httpMethod) {
     case "POST":
       // 1️⃣ Get the request body
       if (!event.body) {
-        return { statusCode: 400, body: "Missing request body" };
+        return lambdaResponse(400, { message: "Missing request body" });
       }
       let data;
       try {
         data = JSON.parse(event.body); // parse JSON string
       } catch (err) {
-        return { statusCode: 400, body: "Invalid JSON" };
+        return lambdaResponse(400, { message: "Invalid JSON" });
       }
       try {
         await client.send(
           new PutItemCommand({
             TableName: tableName,
             Item: {
-              tenantId: { S: uuid() },
+              tenantId: { S: tenantId },
               name: { S: data.name || "" },
               domain: { S: data.domain },
               plan: { S: data.plan },
@@ -43,13 +45,10 @@ export const handler = async (event: any) => {
           })
         );
       } catch (error) {
-        return { statusCode: 500, body: "Could not create tenant" };
+        return lambdaResponse(500, { message: "Could not create tenant" });
       }
 
-      return {
-        statusCode: 201,
-        body: JSON.stringify({ message: "Tenant created successfully" }),
-      };
+      return lambdaResponse(201, { message: "Tenant created successfully" });
 
     case "GET":
       try {
@@ -64,26 +63,23 @@ export const handler = async (event: any) => {
         );
         const item = result.Item;
         if (!item) {
-          return { statusCode: 404, body: "Tenant not found" };
+          return lambdaResponse(404, { message: "Tenant not found" });
         }
-        return {
-          statusCode: 200,
-          body: JSON.stringify(unmarshall(item)),
-        };
+        return lambdaResponse(200, unmarshall(item));
       } catch (error) {
-        return { statusCode: 500, body: "Could not retrieve tenant" };
+        return lambdaResponse(500, { message: "Could not retrieve tenant" });
       }
 
     case "PUT":
       //  update logic
       if (!event.body) {
-        return { statusCode: 400, body: "Missing request body" };
+        return lambdaResponse(400, { message: "Missing request body" });
       }
       let updateData;
       try {
         updateData = JSON.parse(event.body); // parse JSON string
       } catch (err) {
-        return { statusCode: 400, body: "Invalid JSON" };
+        return lambdaResponse(400, { message: "Invalid JSON" });
       }
       // Implement update logic here using UpdateItemCommand
       await client.send(
@@ -102,21 +98,13 @@ export const handler = async (event: any) => {
           },
         })
       );
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ message: "User updated successfully" }),
-      };
+      return lambdaResponse(200, { message: "Tenant updated successfully" });
+   
 
     case "DELETE":
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ message: "User deleted successfully" }),
-      };
+      return lambdaResponse(200, { message: "Tenant deleted successfully" });
 
     default:
-      return {
-        statusCode: 405,
-        body: "Method not allowed",
-      };
+      return lambdaResponse(405, { message: "Method not allowed" });
   }
 };
