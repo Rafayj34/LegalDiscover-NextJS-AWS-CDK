@@ -17,7 +17,7 @@ export class DatabaseStack extends cdk.Stack {
     const { stage } = props;
 
     this.userTable = new Table(this, `UserTable-${stage}`, {
-      // tableName: `legaldiscover-users-${stage}`,
+      tableName: `legaldiscover-users-${stage}`,
       partitionKey: { name: "tenantId", type: AttributeType.STRING },
       sortKey: { name: "userId", type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
@@ -25,7 +25,7 @@ export class DatabaseStack extends cdk.Stack {
     });
 
     this.mattersTable = new Table(this, `MattersTable-${stage}`, {
-      // tableName: `legaldiscover-matters-${stage}`,
+      tableName: `legaldiscover-matters-${stage}`,
       partitionKey: { name: "tenantId", type: AttributeType.STRING },
       sortKey: { name: "matterId", type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
@@ -33,7 +33,7 @@ export class DatabaseStack extends cdk.Stack {
     });
 
     this.tenantsTable = new Table(this, `TenantsTable-${stage}`, {
-      // tableName: `legaldiscover-tenants-${stage}`,
+      tableName: `legaldiscover-tenants-${stage}`,
       partitionKey: { name: "tenantId", type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,

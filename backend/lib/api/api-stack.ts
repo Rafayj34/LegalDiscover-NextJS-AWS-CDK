@@ -1,4 +1,4 @@
-import { StackProps, Stack } from "aws-cdk-lib";
+import { StackProps, Stack, RemovalPolicy } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { Table } from "aws-cdk-lib/aws-dynamodb";
 import {
@@ -6,12 +6,12 @@ import {
   RestApi,
   AuthorizationType,
   CognitoUserPoolsAuthorizer,
-  ResponseType,
   Cors,
 } from "aws-cdk-lib/aws-apigateway";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { UserPool } from "aws-cdk-lib/aws-cognito";
+import { Bucket } from "aws-cdk-lib/aws-s3";
 
 interface ApiStackProps extends StackProps {
   stage: string;
@@ -19,13 +19,14 @@ interface ApiStackProps extends StackProps {
   mattersTable: Table;
   tenantsTable: Table;
   userPoolId: string;
+  storageBucket: Bucket;
 }
 
 export class ApiStack extends Stack {
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
-    const { userTable, mattersTable, tenantsTable, stage } = props;
+    const { userTable, mattersTable, tenantsTable, stage, storageBucket } = props;
 
     const userPool = UserPool.fromUserPoolId(
       this,
@@ -53,26 +54,15 @@ export class ApiStack extends Stack {
       },
     });
 
+    // Rate Limiting
+    // api.addUsagePlan('BasicUsagePlan', {
+    //   name: `BasicUsagePlan-${stage}`,
+    //   throttle: {
+    //     rateLimit:10
+    //   }
+    // });
+
     authorizer._attachToApi(api);
-
-    // // GLOBAL CORS HEADERS FOR ALL RESPONSES
-    // api.addGatewayResponse("Default4xx", {
-    //   type: ResponseType.DEFAULT_4XX,
-    //   responseHeaders: {
-    //     "Access-Control-Allow-Origin": "'*'",
-    //     "Access-Control-Allow-Headers": "'*'",
-    //     "Access-Control-Allow-Methods": "'*'",
-    //   },
-    // });
-
-    // api.addGatewayResponse("Default5xx", {
-    //   type: ResponseType.DEFAULT_5XX,
-    //   responseHeaders: {
-    //     "Access-Control-Allow-Origin": "'*'",
-    //     "Access-Control-Allow-Headers": "'*'",
-    //     "Access-Control-Allow-Methods": "'*'",
-    //   },
-    // });
 
     // // --------------------------- For Users ----------------------------
 
@@ -88,6 +78,8 @@ export class ApiStack extends Stack {
       bundling: {
         externalModules: ["@aws-sdk/client-dynamodb"],
       },
+
+      // logRemovalPolicy: RemovalPolicy.DESTROY
     });
 
     userTable.grantReadWriteData(userApiLambda);
@@ -153,5 +145,19 @@ export class ApiStack extends Stack {
     tenant.addMethod("GET", new LambdaIntegration(tenantApiLambda));
     tenant.addMethod("PUT", new LambdaIntegration(tenantApiLambda));
     tenant.addMethod("DELETE", new LambdaIntegration(tenantApiLambda));
+
+    // -----------------------For Storage ----------------------------
+    const storageLambda = new NodejsFunction(this, `StorageHandler-${stage}`, {
+      // functionName: `LegalDiscoverStorageHandler-${stage}`,
+      entry: "lambda/storage/index.ts",
+      handler: "handler",
+      environment: {
+        STORAGE_BUCKET_NAME: storageBucket.bucketName,
+      },
+    });
+    storageBucket.grantReadWrite(storageLambda);
+
+    const storage = api.root.addResource("storage");
+    storage.addMethod("POST", new LambdaIntegration(storageLambda));
   }
 }

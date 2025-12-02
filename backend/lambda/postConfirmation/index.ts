@@ -1,16 +1,14 @@
 import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
-import { v4 as uuid } from "uuid";
-import lambdaResponse from "../../utils/response";
 
 const client = new DynamoDBClient({});
 
 export const handler = async (event: any) => {
   const { request } = event;
   console.log("Post Confirmation Event:", JSON.stringify(event, null, 2));
-  const address = request.userAttributes["custom:address"];
-  const phone = request.userAttributes["custom:phone"];
+  const address = request.userAttributes.address;
+  const phone = request.userAttributes.phoneNumber;
   const company = request.userAttributes["custom:company"];
-  const name = request.userAttributes["custom:name"];
+  const name = request.userAttributes.fullname;
   const email = request.userAttributes.email;
   const userId = request.userAttributes.sub;
   

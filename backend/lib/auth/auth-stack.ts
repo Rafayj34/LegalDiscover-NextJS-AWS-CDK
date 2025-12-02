@@ -1,4 +1,4 @@
-import { Stack, StackProps } from "aws-cdk-lib";
+import { Stack, StackProps, RemovalPolicy } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import {
   UserPool,
@@ -8,7 +8,6 @@ import {
   CfnUserPoolGroup,
   StringAttribute,
 } from "aws-cdk-lib/aws-cognito";
-import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Table } from "aws-cdk-lib/aws-dynamodb";
@@ -31,7 +30,6 @@ export class AuthStack extends Stack {
       this,
       "PostConfirmationLambda",
       {
-        runtime: lambda.Runtime.NODEJS_20_X,
         entry: path.join(__dirname, "../../lambda/postConfirmation/index.ts"), // your lambda folder
         handler: "handler",
         environment: {
@@ -49,14 +47,15 @@ export class AuthStack extends Stack {
       autoVerify: { email: true },
       standardAttributes: {
         email: { required: true, mutable: true },
+        fullname: { required: false, mutable: true },
+        address: { required: false, mutable: true },
+        phoneNumber: { required: false, mutable: true },
       },
       customAttributes: {
-        name: new StringAttribute({ mutable: true }),
-        address: new StringAttribute({ mutable: true }),
-        phone: new StringAttribute({ mutable: true }),
         company: new StringAttribute({ mutable: true }),
       },
       lambdaTriggers: { postConfirmation: postConfirmationLambda },
+      removalPolicy: RemovalPolicy.DESTROY,
     });
     const groups = [
       "admin",
