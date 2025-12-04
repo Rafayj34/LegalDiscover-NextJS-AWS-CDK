@@ -53,6 +53,7 @@ export class AuthStack extends Stack {
       },
       customAttributes: {
         company: new StringAttribute({ mutable: true }),
+        tenantId: new StringAttribute({ mutable: false }),
       },
       lambdaTriggers: { postConfirmation: postConfirmationLambda },
       removalPolicy: RemovalPolicy.DESTROY,

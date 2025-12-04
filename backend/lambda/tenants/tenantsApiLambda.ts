@@ -11,8 +11,7 @@ const client = new DynamoDBClient({});
 const tableName = process.env.TABLE_NAME!;
 
 export const handler = async (event: any) => {
-  const id = event.pathParameters?.id;
-  const tenantId = "defaultTenant";
+  const tenantId = event.pathParameters?.tenantId;
 
   switch (event.httpMethod) {
     case "POST":
@@ -31,7 +30,7 @@ export const handler = async (event: any) => {
           new PutItemCommand({
             TableName: tableName,
             Item: {
-              tenantId: { S: tenantId },
+              tenantId: { S: tenantId || uuid() },
               name: { S: data.name || "" },
               domain: { S: data.domain },
               plan: { S: data.plan },
@@ -57,7 +56,7 @@ export const handler = async (event: any) => {
           new GetItemCommand({
             TableName: tableName,
             Key: {
-              tenantId: { S: id },
+              tenantId: { S: tenantId },
             },
           })
         );
@@ -86,7 +85,7 @@ export const handler = async (event: any) => {
         new PutItemCommand({
           TableName: tableName,
           Item: {
-            tenantId: { S: id },
+            tenantId: { S: tenantId },
             name: { S: updateData.name || "" },
             domain: { S: updateData.domain },
             plan: { S: updateData.plan },

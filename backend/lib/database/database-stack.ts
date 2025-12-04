@@ -10,6 +10,7 @@ export class DatabaseStack extends cdk.Stack {
   public readonly userTable: Table;
   public readonly mattersTable: Table;
   public readonly tenantsTable: Table;
+  public readonly documentsTable: Table;
 
   constructor(scope: Construct, id: string, props: DatabaseStackProps) {
     super(scope, id, props);
@@ -37,6 +38,15 @@ export class DatabaseStack extends cdk.Stack {
       partitionKey: { name: "tenantId", type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    this.documentsTable = new Table(this, `DocumentsTable-${stage}`, {
+      tableName: `legaldiscover-documents-${stage}`,
+      partitionKey: { name: "tenantId", type: AttributeType.STRING },
+      sortKey: { name: "documentId", type: AttributeType.STRING },
+      billingMode: BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      
     });
   }
 }

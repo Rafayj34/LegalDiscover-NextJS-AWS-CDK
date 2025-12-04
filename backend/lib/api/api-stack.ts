@@ -11,22 +11,25 @@ import {
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { UserPool } from "aws-cdk-lib/aws-cognito";
-import { Bucket } from "aws-cdk-lib/aws-s3";
 
 interface ApiStackProps extends StackProps {
   stage: string;
+
   userTable: Table;
   mattersTable: Table;
   tenantsTable: Table;
+  documentsTable: Table;
+
   userPoolId: string;
-  storageBucket: Bucket;
+  storageLambdaArn: string;
 }
 
 export class ApiStack extends Stack {
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
-    const { userTable, mattersTable, tenantsTable, stage, storageBucket } = props;
+    const { userTable, mattersTable, tenantsTable, documentsTable, stage } =
+      props;
 
     const userPool = UserPool.fromUserPoolId(
       this,
@@ -84,12 +87,16 @@ export class ApiStack extends Stack {
 
     userTable.grantReadWriteData(userApiLambda);
 
-    const users = api.root.addResource("users");
-    users.addMethod("POST", new LambdaIntegration(userApiLambda));
-    const user = users.addResource("{id}");
-    user.addMethod("GET", new LambdaIntegration(userApiLambda));
-    user.addMethod("PUT", new LambdaIntegration(userApiLambda));
-    user.addMethod("DELETE", new LambdaIntegration(userApiLambda));
+    const tenantsRoot = api.root.addResource("tenants");
+    const tenantResource = tenantsRoot.addResource("{tenantId}");
+
+    // --------------------------- For Users (tenant-scoped) ----------------------------
+    const tenantUsers = tenantResource.addResource("users");
+    tenantUsers.addMethod("POST", new LambdaIntegration(userApiLambda));
+    const tenantUser = tenantUsers.addResource("{id}");
+    tenantUser.addMethod("GET", new LambdaIntegration(userApiLambda));
+    tenantUser.addMethod("PUT", new LambdaIntegration(userApiLambda));
+    tenantUser.addMethod("DELETE", new LambdaIntegration(userApiLambda));
 
     // // --------------------------- For Matters ----------------------------
 
@@ -111,13 +118,14 @@ export class ApiStack extends Stack {
     );
     mattersTable.grantReadWriteData(matterApiLambda);
 
-    const matters = api.root.addResource("matters");
-    matters.addMethod("GET", new LambdaIntegration(matterApiLambda));
-    matters.addMethod("POST", new LambdaIntegration(matterApiLambda));
-    const matter = matters.addResource("{id}");
-    matter.addMethod("GET", new LambdaIntegration(matterApiLambda));
-    matter.addMethod("PUT", new LambdaIntegration(matterApiLambda));
-    matter.addMethod("DELETE", new LambdaIntegration(matterApiLambda));
+    // --------------------------- For Matters (tenant-scoped) ----------------------------
+    const tenantMatters = tenantResource.addResource("matters");
+    tenantMatters.addMethod("GET", new LambdaIntegration(matterApiLambda));
+    tenantMatters.addMethod("POST", new LambdaIntegration(matterApiLambda));
+    const tenantMatter = tenantMatters.addResource("{id}");
+    tenantMatter.addMethod("GET", new LambdaIntegration(matterApiLambda));
+    tenantMatter.addMethod("PUT", new LambdaIntegration(matterApiLambda));
+    tenantMatter.addMethod("DELETE", new LambdaIntegration(matterApiLambda));
 
     // // --------------------------- For Tenants ----------------------------
 
@@ -139,25 +147,34 @@ export class ApiStack extends Stack {
     );
     tenantsTable.grantReadWriteData(tenantApiLambda);
 
-    const tenants = api.root.addResource("tenants");
-    tenants.addMethod("POST", new LambdaIntegration(tenantApiLambda));
-    const tenant = tenants.addResource("{id}");
+    // --------------------------- For Tenants ----------------------------
+    tenantsRoot.addMethod("POST", new LambdaIntegration(tenantApiLambda));
+    const tenant = tenantResource;
     tenant.addMethod("GET", new LambdaIntegration(tenantApiLambda));
     tenant.addMethod("PUT", new LambdaIntegration(tenantApiLambda));
     tenant.addMethod("DELETE", new LambdaIntegration(tenantApiLambda));
 
     // -----------------------For Storage ----------------------------
-    const storageLambda = new NodejsFunction(this, `StorageHandler-${stage}`, {
-      // functionName: `LegalDiscoverStorageHandler-${stage}`,
-      entry: "lambda/storage/index.ts",
-      handler: "handler",
-      environment: {
-        STORAGE_BUCKET_NAME: storageBucket.bucketName,
-      },
-    });
-    storageBucket.grantReadWrite(storageLambda);
+    const storageLambda = lambda.Function.fromFunctionArn(
+      this,
+      `ImportedStorageHandler-${stage}`,
+      props.storageLambdaArn
+    );
 
-    const storage = api.root.addResource("storage");
+    // --------------------------- For Storage (tenant-scoped) ----------------------------
+    const storage = tenantResource.addResource("storage");
     storage.addMethod("POST", new LambdaIntegration(storageLambda));
+
+    // // -----------------------For Documents ----------------------------
+   
+    // documentsTable.grantReadWriteData(documentLambda);
+
+    // const documents = api.root.addResource("documents");
+    // const documentWithTenant = documents.addResource("{tenantId}");
+
+    // documentWithTenant.addMethod("GET", new LambdaIntegration(documentLambda));
+    // documents.addMethod("POST", new LambdaIntegration(documentLambda));
+
+
   }
 }

@@ -8,6 +8,7 @@ export const handler = async (event: any) => {
   const address = request.userAttributes.address;
   const phone = request.userAttributes.phoneNumber;
   const company = request.userAttributes["custom:company"];
+  const tenantIdAttr = request.userAttributes["custom:tenantId"];
   const name = request.userAttributes.fullname;
   const email = request.userAttributes.email;
   const userId = request.userAttributes.sub;
@@ -17,7 +18,7 @@ export const handler = async (event: any) => {
     new PutItemCommand({
       TableName: process.env.USER_TABLE_NAME!,
       Item: {
-        tenantId: { S: "defaultTenant" },
+        tenantId: { S: tenantIdAttr || "defaultTenant" },
         userId: { S: userId },
         name: { S: name ?? "" },
         email: { S: email ?? "" },

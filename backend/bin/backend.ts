@@ -27,7 +27,9 @@ const auth = new AuthStack(app, `AuthStack-${stage}`, {
 const storage = new StorageStack(app, `StorageStack-${stage}`, {
   env,
   stage,
+  documentsTable: database.documentsTable,
 });
+
 // API Stack (API Gateway + Lambda)
 new ApiStack(app, `ApiStack-${stage}`, {
   env,
@@ -35,6 +37,7 @@ new ApiStack(app, `ApiStack-${stage}`, {
   userTable: database.userTable,
   mattersTable: database.mattersTable,
   tenantsTable: database.tenantsTable,
+  documentsTable: database.documentsTable,
   userPoolId: auth.userPool.userPoolId,
-  storageBucket: storage.storageBucket,
+  storageLambdaArn: storage.storageLambda.functionArn,
 });

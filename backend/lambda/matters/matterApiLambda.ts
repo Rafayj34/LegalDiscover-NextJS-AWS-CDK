@@ -14,6 +14,11 @@ const tableName = process.env.TABLE_NAME!;
 
 export const handler = async (event: any) => {
   const id = event.pathParameters?.id;
+  const tenantId = event.pathParameters?.tenantId;
+
+  if (!tenantId) {
+    return lambdaResponse(400, { message: "tenantId is required in path" });
+  }
 
   switch (event.httpMethod) {
     case "POST":
@@ -32,7 +37,7 @@ export const handler = async (event: any) => {
           new PutItemCommand({
             TableName: tableName,
             Item: {
-              tenantId: { S: "defaultTenant" },
+              tenantId: { S: tenantId },
               matterId: { S: uuid() },
               title: { S: data.title || "" },
               status: { S: data.status || "" },
@@ -67,7 +72,7 @@ export const handler = async (event: any) => {
               TableName: tableName,
               KeyConditionExpression: "tenantId = :tenantId",
               ExpressionAttributeValues: {
-                ":tenantId": { S: "defaultTenant" },
+                ":tenantId": { S: tenantId },
               },
             })
           )
@@ -84,7 +89,7 @@ export const handler = async (event: any) => {
           new GetItemCommand({
             TableName: tableName,
             Key: {
-              tenantId: { S: "defaultTenant" },
+              tenantId: { S: tenantId },
               matterId: { S: id }
             },
           })
@@ -114,7 +119,7 @@ export const handler = async (event: any) => {
         new PutItemCommand({
           TableName: tableName,
           Item: {
-            tenantId: { S: "defaultTenant" },
+            tenantId: { S: tenantId },
             matterId: { S: uuid() },
             title: { S: updateData.title || "" },
             status: { S: updateData.status },

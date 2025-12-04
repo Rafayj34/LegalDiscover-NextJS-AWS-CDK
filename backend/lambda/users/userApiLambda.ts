@@ -12,6 +12,11 @@ const tableName = process.env.TABLE_NAME!;
 
 export const handler = async (event: any) => {
   const id = event.pathParameters?.id;
+  const tenantId = event.pathParameters?.tenantId;
+
+  if (!tenantId) {
+    return lambdaResponse(400, { message: "tenantId is required in path" });
+  }
 
   switch (event.httpMethod) {
     case "POST":
@@ -30,7 +35,7 @@ export const handler = async (event: any) => {
           new PutItemCommand({
             TableName: tableName,
             Item: {
-              tenantId: { S: "defaultTenant" },
+              tenantId: { S: tenantId },
               userId: { S: uuid() },
               name: { S: data.name || "" },
               email: { S: data.email },
@@ -51,7 +56,7 @@ export const handler = async (event: any) => {
           new GetItemCommand({
             TableName: tableName,
             Key: {
-              tenantId: { S: "defaultTenant" },
+              tenantId: { S: tenantId },
               userId: { S: id },
             },
           })
@@ -82,7 +87,7 @@ export const handler = async (event: any) => {
         new PutItemCommand({
           TableName: tableName,
           Item: {
-            tenantId: { S: "defaultTenant" },
+            tenantId: { S: tenantId },
             userId: { S: id },
             name: { S: updateData.name || "" },
             email: { S: updateData.email },
