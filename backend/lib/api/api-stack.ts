@@ -10,6 +10,8 @@ import {
 } from "aws-cdk-lib/aws-apigateway";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as iam from "aws-cdk-lib/aws-iam";
+import { CfnPermission } from "aws-cdk-lib/aws-lambda";
 import { UserPool } from "aws-cdk-lib/aws-cognito";
 
 interface ApiStackProps extends StackProps {
@@ -160,6 +162,14 @@ export class ApiStack extends Stack {
       `ImportedStorageHandler-${stage}`,
       props.storageLambdaArn
     );
+
+    // Grant API Gateway permission to invoke the imported Lambda (cross-stack)
+    new CfnPermission(this, `StorageLambdaApiGatewayPermission-${stage}`, {
+      functionName: props.storageLambdaArn,
+      principal: "apigateway.amazonaws.com",
+      action: "lambda:InvokeFunction",
+      sourceArn: `arn:aws:execute-api:${this.region}:${this.account}:${api.restApiId}/*/*`,
+    });
 
     // --------------------------- For Storage (tenant-scoped) ----------------------------
     const storage = tenantResource.addResource("storage");

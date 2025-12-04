@@ -33,30 +33,48 @@ export const handler = async (event: any) => {
         return lambdaResponse(400, { message: "Invalid JSON" });
       }
       try {
+        const matterId = uuid();
+        const createdAt = new Date().toISOString();
+        const createdMatter = {
+          tenantId,
+          matterId,
+          title: data.title || "",
+          status: data.status || "",
+          clientId: data.clientId || "",
+          clientName: data.clientName || "",
+          caseType: data.caseType || "",
+          priority: data.priority || "",
+          description: data.description || "",
+          assignedAttorney: data.assignedAttorney || "",
+          createdAt,
+          updatedAt: createdAt,
+        };
+
         await client.send(
           new PutItemCommand({
             TableName: tableName,
             Item: {
               tenantId: { S: tenantId },
-              matterId: { S: uuid() },
-              title: { S: data.title || "" },
-              status: { S: data.status || "" },
-              clientId: { S: data.clientId || "" },
-              clientName: { S: data.clientName || "" },
-              caseType: { S: data.caseType || "" },
-              priority: { S: data.priority || "" },
-              description: { S: data.description || "" },
-              assignedAttorney: { S: data.assignedAttorney || "" },
-              createdAt: { S: new Date().toISOString() },
-              updatedAt: { S: new Date().toISOString() },
+              matterId: { S: matterId },
+              title: { S: createdMatter.title },
+              status: { S: createdMatter.status },
+              clientId: { S: createdMatter.clientId },
+              clientName: { S: createdMatter.clientName },
+              caseType: { S: createdMatter.caseType },
+              priority: { S: createdMatter.priority },
+              description: { S: createdMatter.description },
+              assignedAttorney: { S: createdMatter.assignedAttorney },
+              createdAt: { S: createdMatter.createdAt },
+              updatedAt: { S: createdMatter.updatedAt },
             },
           })
         );
+        return lambdaResponse(201, createdMatter);
       } catch (error) {
+        console.error("Error creating matter:", error);
         return lambdaResponse(500, { message: "Could not create matter" });
       }
 
-      return lambdaResponse(201, { message: "Matter created successfully" });
 
     case "GET":
       if (!id) {
@@ -105,6 +123,9 @@ export const handler = async (event: any) => {
 
     case "PUT":
       //  update logic
+      if (!id) {
+        return lambdaResponse(400, { message: "matterId is required in path" });
+      }
       if (!event.body) {
         return lambdaResponse(400, { message: "Missing request body" });
       }
@@ -114,26 +135,63 @@ export const handler = async (event: any) => {
       } catch (err) {
         return lambdaResponse(400, { message: "Invalid JSON" });
       }
-      // Implement update logic here using UpdateItemCommand
+      
+      // First, get the existing matter to preserve createdAt
+      let existingMatter;
+      try {
+        const getResult = await client.send(
+          new GetItemCommand({
+            TableName: tableName,
+            Key: {
+              tenantId: { S: tenantId },
+              matterId: { S: id },
+            },
+          })
+        );
+        if (!getResult.Item) {
+          return lambdaResponse(404, { message: "Matter not found" });
+        }
+        existingMatter = unmarshall(getResult.Item);
+      } catch (error) {
+        return lambdaResponse(500, { message: "Could not retrieve existing matter" });
+      }
+
+      // Update the matter using the existing matterId
+      const updatedMatter = {
+        tenantId,
+        matterId: id,
+        title: updateData.title ?? existingMatter.title ?? "",
+        status: updateData.status ?? existingMatter.status ?? "",
+        clientId: updateData.clientId ?? existingMatter.clientId ?? "",
+        clientName: updateData.clientName ?? existingMatter.clientName ?? "",
+        caseType: updateData.caseType ?? existingMatter.caseType ?? "",
+        priority: updateData.priority ?? existingMatter.priority ?? "",
+        description: updateData.description ?? existingMatter.description ?? "",
+        assignedAttorney: updateData.assignedAttorney ?? existingMatter.assignedAttorney ?? "",
+        createdAt: existingMatter.createdAt,
+        updatedAt: new Date().toISOString(),
+      };
+
       await client.send(
         new PutItemCommand({
           TableName: tableName,
           Item: {
-            tenantId: { S: tenantId },
-            matterId: { S: uuid() },
-            title: { S: updateData.title || "" },
-            status: { S: updateData.status },
-            clientId: { S: updateData.clientId },
-            clientName: { S: updateData.clientName },
-            caseType: { S: updateData.caseType },
-            priority: { S: updateData.priority },
-            description: { S: updateData.description || "" },
-            assignedAttorney: { S: updateData.assignedAttorney || "" },
-            updatedAt: { S: new Date().toISOString() },
+            tenantId: { S: updatedMatter.tenantId },
+            matterId: { S: updatedMatter.matterId },
+            title: { S: updatedMatter.title },
+            status: { S: updatedMatter.status },
+            clientId: { S: updatedMatter.clientId },
+            clientName: { S: updatedMatter.clientName },
+            caseType: { S: updatedMatter.caseType },
+            priority: { S: updatedMatter.priority },
+            description: { S: updatedMatter.description },
+            assignedAttorney: { S: updatedMatter.assignedAttorney },
+            createdAt: { S: updatedMatter.createdAt },
+            updatedAt: { S: updatedMatter.updatedAt },
           },
         })
       );
-      return lambdaResponse(200, { message: "Matter updated successfully" });
+      return lambdaResponse(200, updatedMatter);
 
     case "DELETE":
       return lambdaResponse(200, { message: "Matter deleted successfully" });

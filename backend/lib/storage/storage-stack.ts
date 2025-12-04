@@ -4,6 +4,7 @@ import { Construct } from "constructs";
 import { Bucket, BlockPublicAccess, EventType } from "aws-cdk-lib/aws-s3";
 import { LambdaDestination } from "aws-cdk-lib/aws-s3-notifications";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import * as logs from "aws-cdk-lib/aws-logs";
 interface StorageStackProps extends cdk.StackProps {
   stage: string;
   documentsTable: Table;
@@ -47,6 +48,7 @@ export class StorageStack extends cdk.Stack {
       bundling: {
         externalModules: ["@aws-sdk/client-dynamodb", "@aws-sdk/client-s3"],
       },
+      logRetention: logs.RetentionDays.TWO_YEARS,
     });
 
     this.storageBucket.grantReadWrite(this.storageLambda);
