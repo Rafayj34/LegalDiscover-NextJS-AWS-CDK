@@ -4,6 +4,7 @@ import { AuthStack } from '../lib/auth/auth-stack';
 import { DatabaseStack } from '../lib/database/database-stack';
 import { ApiStack } from '../lib/api/api-stack';
 import { StorageStack } from '../lib/storage/storage-stack';
+import { PublicAIStack } from '../lib/publicai/publicai-stack';
 const app = new cdk.App();
 
 const stage = app.node.tryGetContext("stage") || "dev";
@@ -30,8 +31,13 @@ const storage = new StorageStack(app, `StorageStack-${stage}`, {
   documentsTable: database.documentsTable,
 });
 
+// Public AI Stack
+const publicAIStack = new PublicAIStack(app, `PublicAIStack-${stage}`, {
+  env,
+  stage,  
+});
 // API Stack (API Gateway + Lambda)
-new ApiStack(app, `ApiStack-${stage}`, {
+const apiStack = new ApiStack(app, `ApiStack-${stage}`, {
   env,
   stage,
   userTable: database.userTable,
@@ -40,4 +46,6 @@ new ApiStack(app, `ApiStack-${stage}`, {
   documentsTable: database.documentsTable,
   userPoolId: auth.userPool.userPoolId,
   storageLambdaArn: storage.storageLambda.functionArn,
+  publicAILambdaArn: publicAIStack.publicAILambda.functionArn,
+
 });

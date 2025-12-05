@@ -10,7 +10,6 @@ import {
 } from "aws-cdk-lib/aws-apigateway";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as iam from "aws-cdk-lib/aws-iam";
 import { CfnPermission } from "aws-cdk-lib/aws-lambda";
 import { UserPool } from "aws-cdk-lib/aws-cognito";
 
@@ -24,9 +23,12 @@ interface ApiStackProps extends StackProps {
 
   userPoolId: string;
   storageLambdaArn: string;
+  publicAILambdaArn: string;
 }
 
 export class ApiStack extends Stack {
+  public readonly api: RestApi;
+
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
@@ -44,7 +46,7 @@ export class ApiStack extends Stack {
       identitySource: "method.request.header.Authorization",
     });
     // // API Gateway and Lambda setup would go here, utilizing userTable and mattersTable as needed.
-    const api = new RestApi(this, `LegalDiscoverApi-${stage}`, {
+    this.api = new RestApi(this, `LegalDiscoverApi-${stage}`, {
       restApiName: `LegalDiscoverApi-${stage}`,
       deployOptions: {
         stageName: stage,
@@ -67,7 +69,7 @@ export class ApiStack extends Stack {
     //   }
     // });
 
-    authorizer._attachToApi(api);
+    authorizer._attachToApi(this.api);
 
     // // --------------------------- For Users ----------------------------
 
@@ -89,7 +91,7 @@ export class ApiStack extends Stack {
 
     userTable.grantReadWriteData(userApiLambda);
 
-    const tenantsRoot = api.root.addResource("tenants");
+    const tenantsRoot = this.api.root.addResource("tenants");
     const tenantResource = tenantsRoot.addResource("{tenantId}");
 
     // --------------------------- For Users (tenant-scoped) ----------------------------
@@ -157,10 +159,13 @@ export class ApiStack extends Stack {
     tenant.addMethod("DELETE", new LambdaIntegration(tenantApiLambda));
 
     // -----------------------For Storage ----------------------------
-    const storageLambda = lambda.Function.fromFunctionArn(
+    const storageLambda = lambda.Function.fromFunctionAttributes(
       this,
       `ImportedStorageHandler-${stage}`,
-      props.storageLambdaArn
+      {
+        functionArn: props.storageLambdaArn,
+        sameEnvironment: true,
+      }
     );
 
     // Grant API Gateway permission to invoke the imported Lambda (cross-stack)
@@ -168,23 +173,24 @@ export class ApiStack extends Stack {
       functionName: props.storageLambdaArn,
       principal: "apigateway.amazonaws.com",
       action: "lambda:InvokeFunction",
-      sourceArn: `arn:aws:execute-api:${this.region}:${this.account}:${api.restApiId}/*/*`,
+      sourceArn: `arn:aws:execute-api:${this.region}:${this.account}:${this.api.restApiId}/*/*`,
     });
 
     // --------------------------- For Storage (tenant-scoped) ----------------------------
     const storage = tenantResource.addResource("storage");
     storage.addMethod("POST", new LambdaIntegration(storageLambda));
 
-    // // -----------------------For Documents ----------------------------
-   
-    // documentsTable.grantReadWriteData(documentLambda);
-
-    // const documents = api.root.addResource("documents");
-    // const documentWithTenant = documents.addResource("{tenantId}");
-
-    // documentWithTenant.addMethod("GET", new LambdaIntegration(documentLambda));
-    // documents.addMethod("POST", new LambdaIntegration(documentLambda));
-
-
+    // --------------------------- For Public AI (tenant-scoped) ----------------------------
+    // const publicAILambda = lambda.Function.fromFunctionAttributes(
+    //   this,
+    //   `ImportedPublicAIHandler-${stage}`,
+    //   {
+    //     functionArn: props.publicAILambdaArn,
+    //     sameEnvironment: true,
+    //   }
+    // );
+    // const publicai = tenantResource.addResource("publicai");
+    // const sendMessage = publicai.addResource("send");
+    // sendMessage.addMethod("POST", new LambdaIntegration(publicAILambda));
   }
 }
