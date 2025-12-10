@@ -1,6 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
-import { Table, AttributeType, BillingMode } from "aws-cdk-lib/aws-dynamodb";
+import { Table, AttributeType, BillingMode, ProjectionType } from "aws-cdk-lib/aws-dynamodb";
 
 interface DatabaseStackProps extends cdk.StackProps {
   stage: string;
@@ -11,6 +11,7 @@ export class DatabaseStack extends cdk.Stack {
   public readonly mattersTable: Table;
   public readonly tenantsTable: Table;
   public readonly documentsTable: Table;
+  public readonly conversationsTable: Table;
 
   constructor(scope: Construct, id: string, props: DatabaseStackProps) {
     super(scope, id, props);
@@ -47,6 +48,22 @@ export class DatabaseStack extends cdk.Stack {
       billingMode: BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       
+    });
+
+    this.conversationsTable = new Table(this, `ConversationsTable-${stage}`, {
+      tableName: `legaldiscover-conversations-${stage}`,
+      partitionKey: { name: "tenantId", type: AttributeType.STRING },
+      sortKey: { name: "messageId", type: AttributeType.STRING },
+      billingMode: BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    // Global Secondary Index for querying messages by conversationId
+    this.conversationsTable.addGlobalSecondaryIndex({
+      indexName: "conversationId-index",
+      partitionKey: { name: "tenantId", type: AttributeType.STRING },
+      sortKey: { name: "conversationId", type: AttributeType.STRING },
+      projectionType: ProjectionType.ALL,
     });
   }
 }

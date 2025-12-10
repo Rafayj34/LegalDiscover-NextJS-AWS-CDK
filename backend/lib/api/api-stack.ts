@@ -20,6 +20,7 @@ interface ApiStackProps extends StackProps {
   mattersTable: Table;
   tenantsTable: Table;
   documentsTable: Table;
+  conversationsTable: Table;
 
   userPoolId: string;
   storageLambdaArn: string;
@@ -181,16 +182,25 @@ export class ApiStack extends Stack {
     storage.addMethod("POST", new LambdaIntegration(storageLambda));
 
     // --------------------------- For Public AI (tenant-scoped) ----------------------------
-    // const publicAILambda = lambda.Function.fromFunctionAttributes(
-    //   this,
-    //   `ImportedPublicAIHandler-${stage}`,
-    //   {
-    //     functionArn: props.publicAILambdaArn,
-    //     sameEnvironment: true,
-    //   }
-    // );
-    // const publicai = tenantResource.addResource("publicai");
-    // const sendMessage = publicai.addResource("send");
-    // sendMessage.addMethod("POST", new LambdaIntegration(publicAILambda));
+    const publicAILambda = lambda.Function.fromFunctionAttributes(
+      this,
+      `ImportedPublicAIHandler-${stage}`,
+      {
+        functionArn: props.publicAILambdaArn,
+        sameEnvironment: true,
+      }
+    );
+
+    // Grant API Gateway permission to invoke the imported Lambda (cross-stack)
+    new CfnPermission(this, `PublicAILambdaApiGatewayPermission-${stage}`, {
+      functionName: props.publicAILambdaArn,
+      principal: "apigateway.amazonaws.com",
+      action: "lambda:InvokeFunction",
+      sourceArn: `arn:aws:execute-api:${this.region}:${this.account}:${this.api.restApiId}/*/*`,
+    });
+
+    const publicai = tenantResource.addResource("publicai");
+    const sendMessage = publicai.addResource("send");
+    sendMessage.addMethod("POST", new LambdaIntegration(publicAILambda));
   }
 }

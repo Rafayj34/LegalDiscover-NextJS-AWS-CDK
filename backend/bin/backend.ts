@@ -34,7 +34,8 @@ const storage = new StorageStack(app, `StorageStack-${stage}`, {
 // Public AI Stack
 const publicAIStack = new PublicAIStack(app, `PublicAIStack-${stage}`, {
   env,
-  stage,  
+  stage,
+  conversationsTable: database.conversationsTable,
 });
 // API Stack (API Gateway + Lambda)
 const apiStack = new ApiStack(app, `ApiStack-${stage}`, {
@@ -44,6 +45,7 @@ const apiStack = new ApiStack(app, `ApiStack-${stage}`, {
   mattersTable: database.mattersTable,
   tenantsTable: database.tenantsTable,
   documentsTable: database.documentsTable,
+  conversationsTable: database.conversationsTable,
   userPoolId: auth.userPool.userPoolId,
   storageLambdaArn: storage.storageLambda.functionArn,
   publicAILambdaArn: publicAIStack.publicAILambda.functionArn,

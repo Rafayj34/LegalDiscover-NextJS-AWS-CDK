@@ -6,10 +6,11 @@ import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import { RemovalPolicy, Duration } from "aws-cdk-lib";
 import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
 import * as integrations from "aws-cdk-lib/aws-apigatewayv2-integrations";
-import { IntegrationType } from "aws-cdk-lib/aws-apigateway";
+import { Table } from "aws-cdk-lib/aws-dynamodb";
 
 interface PublicAIStackProps extends cdk.StackProps {
   stage: string;
+  conversationsTable: Table;
 }
 
 export class PublicAIStack extends cdk.Stack {
@@ -34,12 +35,13 @@ export class PublicAIStack extends cdk.Stack {
       bundling: {
         externalModules: ["@aws-sdk/client-dynamodb"],
       },
+      environment: {
+        OPENAI_SECRET_NAME: openAiSecret.secretName,
+        CONVERSATIONS_TABLE_NAME: props.conversationsTable.tableName,
+      },
     });
     openAiSecret.grantRead(this.publicAILambda);
-    this.publicAILambda.addEnvironment(
-      "OPENAI_SECRET_NAME",
-      openAiSecret.secretName
-    );
+    props.conversationsTable.grantReadWriteData(this.publicAILambda);
 
     this.publicAILambdaApi = new apigwv2.WebSocketApi(
       this,
@@ -66,15 +68,5 @@ export class PublicAIStack extends cdk.Stack {
         },
       }
     );
-
-    new apigwv2.WebSocketStage(this, `PublicAILambdaStage-${stage}`, {
-      webSocketApi: this.publicAILambdaApi,
-      stageName: stage,
-    });
-     // Output the WebSocket endpoint URL
-    new cdk.CfnOutput(this, "WebSocketEndpoint", {
-      value: this.publicAILambdaApi.apiEndpoint,
-      description: "The WebSocket API endpoint URL",
-    });
   }
 }
