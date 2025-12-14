@@ -38,6 +38,7 @@ async function getOpenAiKey(): Promise<string> {
     if (!res.SecretString) {
       throw new Error("Secret has no SecretString value");
     }
+    console.log("OpenAI API key retrieved from Secrets Manager:", res.SecretString);
 
     return res.SecretString as string;
   } catch (error) {
@@ -93,20 +94,82 @@ async function getConversationHistory(
   }
 }
 
+/**
+ * Get all conversations/messages for a specific user
+ * Uses the base table with tenantId (PK) and userId (SK with begins_with)
+ */
+async function getUserConversations(
+  tenantId: string,
+  userId: string
+): Promise<Array<{
+  messageId: string;
+  conversationId: string;
+  role: string;
+  content: string;
+  timestamp: string;
+}>> {
+  try {
+    const result = await dynamoClient.send(
+      new QueryCommand({
+        TableName: conversationsTableName,
+        KeyConditionExpression: "tenantId = :tenantId AND begins_with(userId, :userId)",
+        ExpressionAttributeValues: {
+          ":tenantId": { S: tenantId },
+          ":userId": { S: userId },
+        },
+        ScanIndexForward: false, // Sort by timestamp descending (newest first)
+      })
+    );
+
+    if (!result.Items || result.Items.length === 0) {
+      return [];
+    }
+
+    // Convert DynamoDB items to message format
+    const messages = result.Items.map((item) => {
+      const unmarshalled = unmarshall(item);
+      return {
+        messageId: unmarshalled.messageId,
+        conversationId: unmarshalled.conversationId,
+        role: unmarshalled.role,
+        content: unmarshalled.content,
+        timestamp: unmarshalled.timestamp,
+      };
+    });
+
+    // Sort by timestamp descending (newest first)
+    messages.sort((a, b) => {
+      const timeA = new Date(a.timestamp || 0).getTime();
+      const timeB = new Date(b.timestamp || 0).getTime();
+      return timeB - timeA;
+    });
+
+    return messages;
+  } catch (error) {
+    console.error("Error fetching user conversations:", error);
+    return [];
+  }
+}
+
 async function saveMessage(
   tenantId: string,
+  userId: string,
   conversationId: string,
   messageId: string,
   role: "user" | "assistant",
   content: string
 ): Promise<void> {
   try {
+    // Use composite sort key: userId#messageId to allow multiple messages per user
+    const compositeUserId = `${userId}#${messageId}`;
+    
     await dynamoClient.send(
       new PutItemCommand({
         TableName: conversationsTableName,
         Item: marshall({
           tenantId,
-          messageId,
+          userId: compositeUserId, // Composite key: userId#messageId
+          messageId, // Keep as attribute for reference
           conversationId,
           role,
           content,
@@ -148,10 +211,19 @@ export async function handler(event: any) {
     console.log("Parsed body:", body);
 
     const message = body.message;
+    const userId = body.userId;
+
     if (!message) {
       return {
         statusCode: 400,
         body: JSON.stringify({ error: "Message is required" }),
+      };
+    }
+
+    if (!userId) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: "userId is required" }),
       };
     }
 
@@ -160,7 +232,7 @@ export async function handler(event: any) {
     const userMessageId = uuid();
 
     // Save user message to database
-    await saveMessage(tenantId, conversationId, userMessageId, "user", message);
+    await saveMessage(tenantId, userId, conversationId, userMessageId, "user", message);
 
     // Fetch conversation history from database
     const conversationHistory = await getConversationHistory(
@@ -191,6 +263,7 @@ export async function handler(event: any) {
     // Save assistant response to database
     await saveMessage(
       tenantId,
+      userId,
       conversationId,
       assistantMessageId,
       "assistant",

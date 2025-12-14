@@ -78,7 +78,7 @@ export class ApiStack extends Stack {
       entry: "lambda/users/userApiLambda.ts",
       runtime: lambda.Runtime.NODEJS_20_X,
 
-      functionName: `UserApiLambda-${stage}`,
+      // functionName: `UserApiLambda-${stage}`,
       handler: "handler",
       environment: {
         TABLE_NAME: userTable.tableName,
@@ -111,7 +111,7 @@ export class ApiStack extends Stack {
       {
         runtime: lambda.Runtime.NODEJS_20_X,
         entry: "lambda/matters/matterApiLambda.ts",
-        functionName: `MatterApiLambda-${stage}`,
+        // functionName: `MatterApiLambda-${stage}`,
         handler: "handler",
         environment: {
           TABLE_NAME: mattersTable.tableName,
@@ -139,7 +139,7 @@ export class ApiStack extends Stack {
       `TenantApiLambda-${stage}`,
       {
         runtime: lambda.Runtime.NODEJS_20_X,
-        functionName: `TennantApiLambda-${stage}`,
+        // functionName: `TennantApiLambda-${stage}`,
         entry: "lambda/tenants/tenantsApiLambda.ts",
         handler: "handler",
         environment: {

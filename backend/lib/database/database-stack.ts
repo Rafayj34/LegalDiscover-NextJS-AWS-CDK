@@ -51,9 +51,9 @@ export class DatabaseStack extends cdk.Stack {
     });
 
     this.conversationsTable = new Table(this, `ConversationsTable-${stage}`, {
-      tableName: `legaldiscover-conversations-${stage}`,
+      tableName: `legaldiscover-conversations-v2-${stage}`,
       partitionKey: { name: "tenantId", type: AttributeType.STRING },
-      sortKey: { name: "messageId", type: AttributeType.STRING },
+      sortKey: { name: "userId", type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
