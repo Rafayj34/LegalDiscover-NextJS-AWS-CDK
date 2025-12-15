@@ -200,7 +200,14 @@ export class ApiStack extends Stack {
     });
 
     const publicai = tenantResource.addResource("publicai");
+
+    // POST /tenants/{tenantId}/publicai/send  -> send a new message to Public AI
     const sendMessage = publicai.addResource("send");
     sendMessage.addMethod("POST", new LambdaIntegration(publicAILambda));
+
+    // GET /tenants/{tenantId}/publicai/conversations?userId={userId}
+    // Returns all messages for the given userId (using composite userId sort key)
+    const conversations = publicai.addResource("conversations");
+    conversations.addMethod("GET", new LambdaIntegration(publicAILambda));
   }
 }
