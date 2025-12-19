@@ -180,6 +180,8 @@ export class ApiStack extends Stack {
     // --------------------------- For Storage (tenant-scoped) ----------------------------
     const storage = tenantResource.addResource("storage");
     storage.addMethod("POST", new LambdaIntegration(storageLambda));
+    storage.addMethod("GET", new LambdaIntegration(storageLambda));
+
 
     // --------------------------- For Public AI (tenant-scoped) ----------------------------
     const publicAILambda = lambda.Function.fromFunctionAttributes(
